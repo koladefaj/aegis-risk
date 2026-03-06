@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package aegis.ml_service;
+
+import "common.proto";
+
+service MLService {
+  rpc ScoreTransaction(ScoreTransactionRequest) returns (ScoreTransactionResponse);
+  rpc HealthCheck(aegis.common.HealthCheckRequest) returns (aegis.common.HealthCheckResponse);
+}
+
+message ScoreTransactionRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string transaction_id = 2;
+  double amount = 3;
+  string currency = 4;
+  string sender_id = 5;
+  string receiver_id = 6;
+  string sender_country = 7;
+  string receiver_country = 8;
+  string device_fingerprint = 9;
+  string channel = 10;
+  string created_at = 11;
+}
+
+message ScoreTransactionResponse {
+  string transaction_id = 1;
+  double anomaly_score = 2;
+  string model_version = 3;
+  bool fallback_used = 4;
+  repeated string feature_contributions = 5;
+}

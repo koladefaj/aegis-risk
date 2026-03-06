@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package aegis.transaction;
+
+import "common.proto";
+
+service TransactionService {
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
+  rpc GetTransaction(GetTransactionRequest) returns (GetTransactionResponse);
+  rpc UpdateTransactionStatus(UpdateStatusRequest) returns (UpdateStatusResponse);
+  rpc HealthCheck(aegis.common.HealthCheckRequest) returns (aegis.common.HealthCheckResponse);
+}
+
+message CreateTransactionRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string idempotency_key = 2;
+  double amount = 3;
+  string currency = 4;
+  string sender_id = 5;
+  string receiver_id = 6;
+  string sender_country = 7;
+  string receiver_country = 8;
+  string device_fingerprint = 9;
+  string ip_address = 10;
+  string channel = 11;
+}
+
+message CreateTransactionResponse {
+  string transaction_id = 1;
+  string idempotency_key = 2;
+  double amount = 3;
+  string currency = 4;
+  string sender_id = 5;
+  string receiver_id = 6;
+  string status = 7;
+  string created_at = 8;
+  bool already_existed = 9;
+}
+
+message GetTransactionRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string transaction_id = 2;
+}
+
+message GetTransactionResponse {
+  string transaction_id = 1;
+  string idempotency_key = 2;
+  double amount = 3;
+  string currency = 4;
+  string sender_id = 5;
+  string receiver_id = 6;
+  string sender_country = 7;
+  string receiver_country = 8;
+  string status = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message UpdateStatusRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string transaction_id = 2;
+  string new_status = 3;
+  string reason = 4;
+}
+
+message UpdateStatusResponse {
+  string transaction_id = 1;
+  string previous_status = 2;
+  string new_status = 3;
+  bool success = 4;
+}

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package aegis.common;
+
+option java_multiple_files = true;
+
+// Shared metadata attached to all requests
+message RequestMetadata {
+  string correlation_id = 1;
+  string client_id = 2;
+  string timestamp = 3;
+}
+
+// Standard error response
+message ErrorResponse {
+  string code = 1;
+  string message = 2;
+  map<string, string> details = 3;
+}
+
+// Health check
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string status = 1;
+  string service_name = 2;
+  string version = 3;
+}

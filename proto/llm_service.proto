@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package aegis.llm_service;
+
+import "common.proto";
+
+service LLMService {
+  // Unary RPC — full structured JSON response
+  rpc ExplainRisk(ExplainRiskRequest) returns (ExplainRiskResponse);
+
+  // Server-streaming RPC — token-by-token SSE-compatible output
+  // Makes LLM inference feel ~2s instead of 8-10s
+  rpc StreamExplainRisk(ExplainRiskRequest) returns (stream ExplanationChunk);
+
+  rpc HealthCheck(aegis.common.HealthCheckRequest) returns (aegis.common.HealthCheckResponse);
+}
+
+message ExplainRiskRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string transaction_id = 2;
+  double risk_score = 3;
+  string risk_level = 4;
+  repeated string triggered_rules = 5;
+  double ml_anomaly_score = 6;
+  double amount = 7;
+  string currency = 8;
+  string sender_country = 9;
+  string receiver_country = 10;
+}
+
+message ExplainRiskResponse {
+  string transaction_id = 1;
+  string summary = 2;
+  repeated string risk_factors = 3;
+  string recommendation = 4;
+  double confidence = 5;
+  bool fallback_used = 6;
+}
+
+// Streaming chunk for SSE-compatible explanation delivery
+message ExplanationChunk {
+  string transaction_id = 1;
+  string chunk_type = 2;     // "token", "risk_factors", "recommendation", "done", "error"
+  string content = 3;        // token text, JSON array, or recommendation string
+  int32 index = 4;           // sequential chunk index
+}

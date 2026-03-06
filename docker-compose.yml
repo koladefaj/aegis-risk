@@ -1,0 +1,134 @@
+services:
+  # ─── Infrastructure ─────────────────────────────────────
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: aegis
+      POSTGRES_PASSWORD: aegis_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegis"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:3.0
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sqs
+      DEFAULT_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+    volumes:
+      - ./infra/localstack-init.sh:/etc/localstack/init/ready.d/init.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ─── API Gateway ────────────────────────────────────────
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      transaction-service:
+        condition: service_started
+    networks:
+      - aegis-net
+
+  # ─── Transaction Service ────────────────────────────────
+  transaction-service:
+    build:
+      context: .
+      dockerfile: services/transaction-service/Dockerfile
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - aegis-net
+
+  # ─── Risk Engine Service ────────────────────────────────
+  risk-engine-service:
+    build:
+      context: .
+      dockerfile: services/risk-engine-service/Dockerfile
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      ml-service:
+        condition: service_started
+      llm-service:
+        condition: service_started
+    networks:
+      - aegis-net
+
+  # ─── ML Service ─────────────────────────────────────────
+  ml-service:
+    build:
+      context: .
+      dockerfile: services/ml-service/Dockerfile
+    env_file: .env
+    networks:
+      - aegis-net
+
+  # ─── LLM Service ────────────────────────────────────────
+  llm-service:
+    build:
+      context: .
+      dockerfile: services/llm-service/Dockerfile
+    env_file: .env
+    networks:
+      - aegis-net
+
+  # ─── Notification Service ───────────────────────────────
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - aegis-net
+
+volumes:
+  postgres_data:
+
+networks:
+  aegis-net:
+    driver: bridge

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package aegis.notification;
+
+import "common.proto";
+
+service NotificationService {
+  rpc RegisterWebhook(RegisterWebhookRequest) returns (RegisterWebhookResponse);
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+  rpc GetWebhookStatus(GetWebhookStatusRequest) returns (GetWebhookStatusResponse);
+  rpc HealthCheck(aegis.common.HealthCheckRequest) returns (aegis.common.HealthCheckResponse);
+}
+
+message RegisterWebhookRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string client_id = 2;
+  string url = 3;
+  repeated string events = 4;
+}
+
+message RegisterWebhookResponse {
+  string webhook_id = 1;
+  string url = 2;
+  string client_id = 3;
+  repeated string events = 4;
+  string created_at = 5;
+}
+
+message SendNotificationRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string transaction_id = 2;
+  string event = 3;
+  double risk_score = 4;
+  string risk_level = 5;
+  repeated string triggered_rules = 6;
+  string explanation_summary = 7;
+  string evaluated_at = 8;
+}
+
+message SendNotificationResponse {
+  string transaction_id = 1;
+  int32 webhooks_triggered = 2;
+  bool success = 3;
+}
+
+message GetWebhookStatusRequest {
+  aegis.common.RequestMetadata metadata = 1;
+  string webhook_id = 2;
+}
+
+message GetWebhookStatusResponse {
+  string webhook_id = 1;
+  string url = 2;
+  string status = 3;
+  int32 delivery_count = 4;
+  int32 failure_count = 5;
+}
