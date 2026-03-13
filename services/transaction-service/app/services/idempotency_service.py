@@ -3,6 +3,7 @@
 import json
 import redis.asyncio as redis
 from app.config import settings
+from aegis_shared.utils.redis import get_redis
 from aegis_shared.utils.logging import get_logger
 
 logger = get_logger("idempotency_service")
@@ -19,10 +20,7 @@ class IdempotencyService:
     """
 
     def __init__(self):
-        self.redis_client = redis.from_url(
-            settings.REDIS_URL,
-            decode_responses=True,
-        )
+        self.redis_client = get_redis()
 
     async def acquire_lock(self, idempotency_key: str) -> bool:
         """

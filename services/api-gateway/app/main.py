@@ -12,6 +12,7 @@ from app.middleware.correlation import CorrelationIdMiddleware
 
 from app.grpc_clients.transaction_client import TransactionGRPCClient
 from aegis_shared.utils.logging import setup_logger
+from aegis_shared.utils.redis import init_redis
 
 
 from app.routers.auth import router as auth_router
@@ -24,6 +25,9 @@ logger = setup_logger("api-gateway", settings.LOG_LEVEL)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
+    # Initialize Redis
+    init_redis(settings.REDIS_URL)
+    
     # Initialize the client
     client = TransactionGRPCClient()
     

@@ -105,8 +105,11 @@ class TransactionServicer:
             await context.abort(grpc.StatusCode.ALREADY_EXISTS, e.message)
 
         except ValueError as e:
-            logger.warning("validation_error", error=str(e),)
+            logger.warning("invalid_argument", error=str(e))
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
+
+        except (grpc.RpcError, grpc.aio.AbortError):
+            raise
 
         except Exception as e:
             logger.error("create_transaction_failed", error=str(e),)
@@ -123,6 +126,9 @@ class TransactionServicer:
                 await context.abort(grpc.StatusCode.NOT_FOUND, f"Transaction {transaction_id} not found")
 
             return TransactionMapper.to_get_proto(result)
+
+        except (grpc.RpcError, grpc.aio.AbortError):
+            raise
 
         except Exception as e:
             logger.error("get_transaction_failed", transaction_id=transaction_id, error=str(e))
@@ -147,6 +153,9 @@ class TransactionServicer:
         except ValueError as e:
             logger.warning("invalid_status_transition", transaction_id=grpc_request.transaction_id, error=str(e))
             await context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
+
+        except (grpc.RpcError, grpc.aio.AbortError):
+            raise
 
         except Exception as e:
             logger.error("update_status_failed", transaction_id=grpc_request.transaction_id, error=str(e))

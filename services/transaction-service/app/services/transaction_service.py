@@ -129,8 +129,13 @@ class TransactionBusinessService:
         )
 
     async def get_by_id(self, transaction_id: str) -> TransactionResponse | None:
-        
-        result = await self.repo.find_by_id(transaction_id)
+        import uuid
+        try:
+            parsed_id = uuid.UUID(transaction_id)
+        except ValueError:
+            return None
+
+        result = await self.repo.find_by_id(parsed_id)
         if result is None:
             return None
         return TransactionResponse.model_validate(result)
@@ -141,4 +146,10 @@ class TransactionBusinessService:
         new_status: str,
         reason: str = "",
     ) -> TransactionUpdate:
-        return await self.repo.update_status(transaction_id, new_status, reason)
+        import uuid
+        try:
+            parsed_id = uuid.UUID(transaction_id)
+        except ValueError:
+            raise ValueError(f"Invalid transaction ID format: {transaction_id}")
+
+        return await self.repo.update_status(parsed_id, new_status, reason)
