@@ -1,3 +1,5 @@
+""" API Gateway configurations from env """
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,13 +7,13 @@ class Settings(BaseSettings):
     """API Gateway settings."""
 
     # General
-    ENVIRONMENT: str = "development"
+    ENVIRONMENT: str 
     LOG_LEVEL: str = "INFO"
     API_GATEWAY_PORT: int = 8000
     CORRELATION_ID_HEADER: str = "X-Correlation-ID"
 
     # JWT
-    JWT_SECRET_KEY: str = "super-secret-key-change-in-production"
+    JWT_SECRET_KEY: str
     JWT_ALGORITHM: str 
     JWT_EXPIRY_MINUTES: int = 30
 
@@ -33,6 +35,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_WINDOW_SECONDS: int = 60
 
     # gRPC service endpoints
+    GRPC_TIMEOUT: int
+    GRPC_USE_TLS: bool
+    
     TRANSACTION_GRPC_HOST: str = "transaction-service"
     TRANSACTION_GRPC_PORT: int = 50051
     RISK_ENGINE_GRPC_HOST: str = "risk-engine-service"

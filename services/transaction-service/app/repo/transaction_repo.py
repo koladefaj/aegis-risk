@@ -1,5 +1,9 @@
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+""" Transaction repositoy, database operations. """
+
+from sqlalchemy import select
+from datetime import datetime, UTC
+from uuid import UUID
+
 
 from app.db.session import get_session
 from app.models.transaction import Transaction
@@ -20,7 +24,6 @@ VALID_TRANSITIONS = {
 
 class TransactionRepository:
     """Database operations for Transaction model.
-
     All operations use atomic transactions with proper error handling.
     """
 
@@ -35,79 +38,50 @@ class TransactionRepository:
         """
         async with get_session() as session:
             txn = Transaction(**data)
-            session.add(txn)
-            await session.commit()
-            await session.refresh(txn)
+            try:
+                session.add(txn)
+                await session.commit()
+                await session.refresh(txn)
+            except Exception:
+                await session.rollback()
+                raise
+
             logger.info("transaction_created", transaction_id=str(txn.transaction_id))
             return txn
 
-    async def find_by_id(self, transaction_id: str) -> dict | None:
+    async def find_by_id(self, transaction_id: UUID) -> Transaction | None:
         """Find a transaction by ID.
 
         Args:
             transaction_id: Transaction UUID.
 
         Returns:
-            Transaction dict or None.
+            Transaction ORM instance or None.
         """
         async with get_session() as session:
-            stmt = select(Transaction).where(Transaction.id == transaction_id)
+            stmt = select(Transaction).where(Transaction.transaction_id == transaction_id)
             result = await session.execute(stmt)
             txn = result.scalar_one_or_none()
+            return txn
 
-            if txn is None:
-                return None
-
-            return {
-                "transaction_id": str(txn.transaction_id),
-                "idempotency_key": txn.idempotency_key,
-                "amount": str(txn.amount),
-                "currency": txn.currency,
-                "sender_id": txn.sender_id,
-                "receiver_id": txn.receiver_id,
-                "sender_country": txn.sender_country,
-                "receiver_country": txn.receiver_country,
-                "status": txn.status,
-                "created_at": txn.created_at.isoformat() if txn.created_at else None,
-                "updated_at": txn.updated_at.isoformat() if txn.updated_at else None,
-            }
-
-    async def find_by_idempotency_key(self, idempotency_key: str) -> dict | None:
+    async def find_by_idempotency_key(self, idempotency_key: str) -> Transaction | None:
         """Find a transaction by idempotency key.
 
         Args:
             idempotency_key: Client-provided unique key.
 
         Returns:
-            Transaction dict or None.
+            Transaction ORM instance or None.
         """
         async with get_session() as session:
-            stmt = select(Transaction).where(
-                Transaction.idempotency_key == idempotency_key
-            )
+            stmt = select(Transaction).where(Transaction.idempotency_key == idempotency_key)
             result = await session.execute(stmt)
             txn = result.scalar_one_or_none()
-
-            if txn is None:
-                return None
-
-            return {
-                "transaction_id": txn.id,
-                "idempotency_key": txn.idempotency_key,
-                "amount": float(txn.amount),
-                "currency": txn.currency,
-                "sender_id": txn.sender_id,
-                "receiver_id": txn.receiver_id,
-                "sender_country": txn.sender_country,
-                "receiver_country": txn.receiver_country,
-                "status": txn.status,
-                "created_at": txn.created_at.isoformat() if txn.created_at else None,
-                "already_existed": True,
-            }
+            return txn
 
     async def update_status(
         self,
-        transaction_id: str,
+        transaction_id: UUID,
         new_status: str,
         reason: str = "",
     ) -> dict:
@@ -127,10 +101,9 @@ class TransactionRepository:
             ValueError: If transition is invalid.
         """
         async with get_session() as session:
-            # Lock the row for update
             stmt = (
                 select(Transaction)
-                .where(Transaction.id == transaction_id)
+                .where(Transaction.transaction_id == transaction_id)
                 .with_for_update()
             )
             result = await session.execute(stmt)
@@ -150,6 +123,7 @@ class TransactionRepository:
 
             previous_status = txn.status
             txn.status = target_status.value
+            txn.updated_at = datetime.now(UTC)
 
             await session.commit()
 

@@ -15,6 +15,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - aegis-net
 
   redis:
     image: redis
@@ -25,6 +27,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    networks:
+      - aegis-net
 
   localstack:
     image: localstack/localstack:3.0
@@ -68,6 +72,8 @@ services:
       context: .
       dockerfile: services/transaction-service/Dockerfile
     env_file: .env
+    expose:
+      - "50051" 
     depends_on:
       postgres:
         condition: service_healthy

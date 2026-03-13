@@ -1,3 +1,5 @@
+"""JWT Auth with AWS Conginto """
+
 import httpx
 import jwt
 from jwt.exceptions import PyJWTError, ExpiredSignatureError
@@ -13,13 +15,16 @@ logger = get_logger("auth")
 
 @cached(cache=TTLCache(maxsize=1, ttl=3600))
 def get_jwks() -> dict:
+
     response = httpx.get(settings.JWKS_URL, timeout=10)
     response.raise_for_status()
+
     return response.json()
 
 
 def get_public_key(kid: str):
     """Find the JWK matching `kid` and convert it to an RSA public key object."""
+
     jwks = get_jwks()
 
     jwk = next(
@@ -30,6 +35,7 @@ def get_public_key(kid: str):
     if not jwk:
         # kid not found possible keys may have rotated, bust cache and retry once
         get_jwks.cache_clear()
+        
         jwks = get_jwks()
         jwk = next((k for k in jwks["keys"] if k["kid"] == kid), None)
 
@@ -68,8 +74,8 @@ def verify_token(token: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
         )
-    except PyJWTError as e:
+    except PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token",
+            detail="Invalid token",
         )

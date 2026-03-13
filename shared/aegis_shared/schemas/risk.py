@@ -1,4 +1,6 @@
-from datetime import datetime, timezone
+""" Risk related pydantic schemas. """
+
+from datetime import datetime, UTC
 from pydantic import BaseModel, Field, ConfigDict
 from aegis_shared.enums import RiskLevel, RuleFlag
 
@@ -38,7 +40,7 @@ class RiskResult(BaseModel):
     rule_score: float = Field(..., ge=0.0, le=100.0)
     processing_time_ms: float
     worker_id: str
-    evaluated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    evaluated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,4 +52,4 @@ class RiskResultResponse(BaseModel):
     risk_level: RiskLevel
     triggered_rules: list[str]
     explanation: LLMExplanation | None = None
-    evaluated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    evaluated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

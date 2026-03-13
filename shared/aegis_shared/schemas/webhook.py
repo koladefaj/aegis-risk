@@ -1,3 +1,5 @@
+""" Webhook related pydantic schemas. """
+
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 from aegis_shared.enums import WebhookStatus

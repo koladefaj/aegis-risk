@@ -1,4 +1,6 @@
-import httpx, os, base64, hashlib, secrets
+""" Auth api routes """
+
+import httpx
 from app.config import settings
 from fastapi import APIRouter, HTTPException, status
 from aegis_shared.schemas.auth import TokenResponse
@@ -15,6 +17,7 @@ def login():
 
 @router.get("/callback", response_model=TokenResponse)
 async def callback(code: str):
+
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{settings.COGNITO_DOMAIN}/oauth2/token",
@@ -35,6 +38,7 @@ async def callback(code: str):
             )
         
         tokens = response.json()
+
         return TokenResponse(
             access_token=tokens["access_token"],
             id_token=tokens["id_token"],
@@ -45,11 +49,13 @@ async def callback(code: str):
 @router.get("/logout")
 def logout():
     """Redirect to Cognito logout endpoint."""
+
     url = (
         f"{settings.COGNITO_DOMAIN}/logout"
         f"?client_id={settings.COGNITO_APP_CLIENT_ID}"
         f"&logout_uri=http://localhost:8000/"
     )
+    
     return RedirectResponse(url)
 
 

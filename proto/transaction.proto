@@ -14,7 +14,7 @@ service TransactionService {
 message CreateTransactionRequest {
   aegis.common.RequestMetadata metadata = 1;
   string idempotency_key = 2;
-  double amount = 3;
+  string amount = 3;
   string currency = 4;
   string sender_id = 5;
   string receiver_id = 6;
@@ -28,13 +28,15 @@ message CreateTransactionRequest {
 message CreateTransactionResponse {
   string transaction_id = 1;
   string idempotency_key = 2;
-  double amount = 3;
+  string amount = 3;
   string currency = 4;
   string sender_id = 5;
   string receiver_id = 6;
   string status = 7;
   string created_at = 8;
   bool already_existed = 9;
+  string sender_country = 10;
+  string receiver_country = 11;
 }
 
 message GetTransactionRequest {
@@ -45,7 +47,7 @@ message GetTransactionRequest {
 message GetTransactionResponse {
   string transaction_id = 1;
   string idempotency_key = 2;
-  double amount = 3;
+  string amount = 3;
   string currency = 4;
   string sender_id = 5;
   string receiver_id = 6;

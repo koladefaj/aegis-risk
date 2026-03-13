@@ -1,10 +1,11 @@
+""" Database session management with async Sqlalchemy. """
+
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 
 from app.config import settings
-from app.db.base import Base
 
 # Create async engine with connection pooling
 engine = create_async_engine(

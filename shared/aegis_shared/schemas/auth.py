@@ -1,3 +1,5 @@
+""" Authentication Pydantic Schemas."""
+
 from pydantic import BaseModel, field_validator
 
 class AuthUser(BaseModel):

@@ -1,5 +1,7 @@
+""" Sqlalchemy Transaction Model. """
+
 import uuid
-from sqlalchemy import Column, DateTime, Numeric, Index, String, func, text
+from sqlalchemy import DateTime, Numeric, Index, String, func, text
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from decimal import Decimal

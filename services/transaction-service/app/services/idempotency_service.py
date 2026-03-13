@@ -8,6 +8,7 @@ from aegis_shared.utils.logging import get_logger
 logger = get_logger("idempotency_service")
 
 IDEMPOTENCY_TTL_SECONDS = 86400  # 24 hours
+PROCESSING_TTL_SECONDS = 60  # lock expiry
 
 
 class IdempotencyService:
@@ -22,6 +23,29 @@ class IdempotencyService:
             settings.REDIS_URL,
             decode_responses=True,
         )
+
+    async def acquire_lock(self, idempotency_key: str) -> bool:
+        """
+        Attempt to acquire processing lock.
+        
+        Returns:
+            True if lock acquired (safe to process)
+            False if another request is already processing
+        """
+        key = f"idempotency:lock:{idempotency_key}"
+
+        try:
+            result = await self.redis_client.set(
+                key,
+                "processing",
+                nx=True,
+                ex=PROCESSING_TTL_SECONDS,
+            )
+
+            return result is True
+        except Exception as e:
+            logger.error("idempotency_lock_failed", error=str(e))
+            return True
 
     async def check(self, idempotency_key: str) -> dict | None:
         """Check if an idempotency key has been seen before.
@@ -50,7 +74,7 @@ class IdempotencyService:
             idempotency_key: Client-provided unique key.
             response: Response dict to cache.
         """
-        key = f"idempotency:{idempotency_key}"
+        key = f"idempotency:response:{idempotency_key}"
         try:
             await self.redis_client.setex(
                 key,

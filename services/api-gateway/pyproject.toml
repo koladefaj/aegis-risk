@@ -18,15 +18,11 @@ dependencies = [
     "structlog (>=25.5.0,<26.0.0)",
     "slowapi (>=0.1.9,<0.2.0)",
     "redis (>=7.3.0,<8.0.0)",
+    "protobuf (>=7.34.0,<8.0.0)",
 ]
 
-
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[[tool.poetry.source]]
-name = "safety"
-url = "https://pkgs.safetycli.com/repository/none-19107/pypi/simple/"
-priority = "primary"
-
+# ← no [[tool.poetry.source]] block at all

@@ -22,7 +22,6 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-import common_pb2 as common__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10ml_service.proto\x12\x10\x61\x65gis.ml_service\x1a\x0c\x63ommon.proto\"\x9f\x02\n\x17ScoreTransactionRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\x01\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x16\n\x0esender_country\x18\x07 \x01(\t\x12\x18\n\x10receiver_country\x18\x08 \x01(\t\x12\x1a\n\x12\x64\x65vice_fingerprint\x18\t \x01(\t\x12\x0f\n\x07\x63hannel\x18\n \x01(\t\x12\x12\n\ncreated_at\x18\x0b \x01(\t\"\x96\x01\n\x18ScoreTransactionResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x15\n\ranomaly_score\x18\x02 \x01(\x01\x12\x15\n\rmodel_version\x18\x03 \x01(\t\x12\x15\n\rfallback_used\x18\x04 \x01(\x08\x12\x1d\n\x15\x66\x65\x61ture_contributions\x18\x05 \x03(\t2\xca\x01\n\tMLService\x12i\n\x10ScoreTransaction\x12).aegis.ml_service.ScoreTransactionRequest\x1a*.aegis.ml_service.ScoreTransactionResponse\x12R\n\x0bHealthCheck\x12 .aegis.common.HealthCheckRequest\x1a!.aegis.common.HealthCheckResponseb\x06proto3')
