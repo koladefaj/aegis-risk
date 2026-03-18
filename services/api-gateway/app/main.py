@@ -12,7 +12,7 @@ from app.middleware.correlation import CorrelationIdMiddleware
 
 from app.grpc_clients.transaction_client import TransactionGRPCClient
 from aegis_shared.utils.logging import setup_logger
-from aegis_shared.utils.redis import init_redis
+from aegis_shared.utils.redis import init_redis, close_redis
 
 
 from app.routers.auth import router as auth_router
@@ -26,10 +26,10 @@ logger = setup_logger("api-gateway", settings.LOG_LEVEL)
 async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Initialize Redis
-    init_redis(settings.REDIS_URL)
+    await init_redis(settings.REDIS_URL)
     
     # Initialize the client
-    client = TransactionGRPCClient()
+    client = TransactionGRPCClient(channel = grpc.aio.insecure_channel(settings.TRANSACTION_GRPC_ADDR))
     
     # Store it in app state so dependencies can find it
     app.state.transaction_client = client
@@ -39,6 +39,7 @@ async def lifespan(app: FastAPI):
     
     # Clean up 
     await client.close()
+    await close_redis()
     logger.info("api_gateway_shutting_down")
 
 
@@ -71,6 +72,7 @@ async def grpc_exception_handler(request: Request, exc: grpc.RpcError):
     mapping = {
         grpc.StatusCode.NOT_FOUND: (status.HTTP_404_NOT_FOUND, "Resource not found"),
         grpc.StatusCode.ALREADY_EXISTS: (status.HTTP_409_CONFLICT, "Resource already exists"),
+        grpc.StatusCode.ABORTED: (status.HTTP_409_CONFLICT, "Conflict: operation locked by another request"),
         grpc.StatusCode.INVALID_ARGUMENT: (status.HTTP_400_BAD_REQUEST, "Invalid arguments"),
         grpc.StatusCode.PERMISSION_DENIED: (status.HTTP_403_FORBIDDEN, "Permission denied"),
         grpc.StatusCode.UNAUTHENTICATED: (status.HTTP_401_UNAUTHORIZED, "Unauthenticated"),

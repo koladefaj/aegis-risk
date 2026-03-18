@@ -34,7 +34,7 @@ async def callback(code: str):
         if response.status_code != 200:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=response.text
+                detail="Bad Request"
             )
         
         tokens = response.json()

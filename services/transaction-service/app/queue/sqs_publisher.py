@@ -4,6 +4,7 @@ import json
 import asyncio
 import aioboto3
 from typing import Optional
+from aegis_shared.utils.sqs import get_boto_session
 from app.config import settings
 from aegis_shared.utils.logging import get_logger
 
@@ -20,7 +21,7 @@ class SQSPublisher:
     RETRY_DELAY = 1  # seconds
 
     def __init__(self):
-        self.session = aioboto3.Session()
+        self.session = get_boto_session()
         self._queue_url: str | None = None
 
     def _client(self):
@@ -82,7 +83,7 @@ class SQSPublisher:
         for attempt in range(1, self.RETRY_ATTEMPTS + 1):
             try:
                 async with self._client() as client:
-                    # build kwargs dict only add FIFO params if needed
+                    
                     send_kwargs = {
                         "QueueUrl": queue_url,
                         "MessageBody": json.dumps(payload, default=str),

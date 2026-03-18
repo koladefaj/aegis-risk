@@ -22,9 +22,9 @@ logger = get_logger("transaction_servicer")
 class TransactionServicer:
     """gRPC servicer implementing the TransactionService."""
 
-    def __init__(self, transaction_service=None, idempotency_service=None):
-        self.transaction_service = transaction_service or TransactionBusinessService()
-        self.idempotency_service = idempotency_service or IdempotencyService()
+    def __init__(self, transaction_service: TransactionBusinessService, idempotency_service: IdempotencyService):
+        self.transaction_service = transaction_service
+        self.idempotency_service = idempotency_service
 
     async def CreateTransaction(self, grpc_request, context) -> CreateTransactionResponse:
         """Create a new transaction with idempotency check."""
@@ -66,8 +66,12 @@ class TransactionServicer:
             
             # Perfect duplicate hit - return the cached response
             logger.info("idempotent_duplicate_detected", idempotency_key=idempotency_key)
+
+            cached_response_payload = cached["response"]
+            cached_response_payload["already_existed"] = True
+
             response = CreateTransactionResponse()
-            return ParseDict(cached["response"], response, ignore_unknown_fields=True)
+            return ParseDict(cached_response_payload, response, ignore_unknown_fields=True)
         
         # 2. Cache miss - acquire lock  
         lock_acquired = await self.idempotency_service.acquire_lock(idempotency_key)
@@ -88,7 +92,11 @@ class TransactionServicer:
             cached = await self.idempotency_service.check(idempotency_key)
 
             if cached:
-                return ParseDict(cached["response"], response, ignore_unknown_fields=True)
+                cached_response_payload = cached["response"]
+                cached_response_payload["already_existed"] = True
+                
+                response = CreateTransactionResponse()
+                return ParseDict(cached_response_payload, response, ignore_unknown_fields=True)
             
             # 4. Process New transaction
             result = await self.transaction_service.create(

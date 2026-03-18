@@ -42,6 +42,13 @@ message EvaluateRiskRequest {
   string created_at = 12;
 }
 
+// ── Inline risk factor for sync response ─────────────────────────────────────
+message RiskFactor {
+  string factor = 1;    // "HIGH_VELOCITY", "AMOUNT_ANOMALY" etc.
+  string severity = 2;  // "HIGH", "MEDIUM", "LOW"
+  string detail = 3;    // "8 transactions in 1 hour"
+}
+
 message RuleFlagResult {
   string rule_name = 1;
   bool triggered = 2;
@@ -51,19 +58,32 @@ message RuleFlagResult {
 
 message EvaluateRiskResponse {
   string transaction_id = 1;
-  double risk_score = 2;
-  string risk_level = 3;
-  repeated RuleFlagResult rule_flags = 4;
-  double ml_anomaly_score = 5;
-  bool ml_fallback_used = 6;
-  string ml_model_version = 7;
-  string llm_summary = 8;
-  repeated string llm_risk_factors = 9;
-  string llm_recommendation = 10;
-  bool llm_fallback_used = 11;
-  double processing_time_ms = 12;
-  string worker_id = 13;
-  string evaluated_at = 14;
+  string decision = 2;              // "APPROVE", "BLOCK", "REVIEW"
+  double risk_score = 3;            // 0.0 - 1.0
+  string risk_level = 4;            // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  string confidence = 5;            // "HIGH", "MEDIUM", "LOW"
+  repeated RiskFactor risk_factors = 6;  // human-readable reasons for bank
+  double processing_time_ms = 7;
+  string model_version = 8;
+}
+
+message GetRiskResultResponse {
+  string transaction_id = 1;
+  string decision = 2;
+  double risk_score = 3;
+  string risk_level = 4;
+  repeated RiskFactor risk_factors = 5;        
+  repeated RuleFlagResult rule_flags = 6;
+  double ml_anomaly_score = 7;
+  bool ml_fallback_used = 8;
+  string ml_model_version = 9;
+  string llm_summary = 10;
+  repeated string llm_risk_factors = 11;
+  string llm_recommendation = 12;
+  bool llm_fallback_used = 13;
+  double processing_time_ms = 14;
+  string worker_id = 15;
+  string evaluated_at = 16;
 }
 
 message GetRiskResultRequest {
@@ -71,12 +91,3 @@ message GetRiskResultRequest {
   string transaction_id = 2;
 }
 
-message GetRiskResultResponse {
-  string transaction_id = 1;
-  double risk_score = 2;
-  string risk_level = 3;
-  repeated RuleFlagResult rule_flags = 4;
-  double ml_anomaly_score = 5;
-  string llm_summary = 6;
-  string evaluated_at = 7;
-}

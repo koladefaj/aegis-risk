@@ -10,7 +10,13 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     # gRPC
+    GRPC_TIMEOUT: int
+    GRPC_USE_TLS: bool
     TRANSACTION_GRPC_PORT: int
+
+    RISK_ENGINE_GRPC_PORT: int
+    RISK_ENGINE_GRPC_HOST: str = "risk-engine-service"
+
 
     # Database
     POSTGRES_USER: str
@@ -31,9 +37,6 @@ class Settings(BaseSettings):
     AWS_ENDPOINT_URL: str 
     SQS_TRANSACTION_QUEUE: str
 
-    #DATABASE_URL = "postgresql+asyncpg://aegis:aegis_secret@localhost:5432/<service_db_name>"
-    #docker compose run --rm <service-name> alembic upgrade head
-
     @property
     def DATABASE_URL(self) -> str:
         return (
@@ -51,6 +54,11 @@ class Settings(BaseSettings):
     @property
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+    
+    @property
+    def RISK_ENGINE_GRPC_ADDR(self) -> str:
+        return f"{self.RISK_ENGINE_GRPC_HOST}:{self.RISK_ENGINE_GRPC_PORT}"
+
 
     model_config = SettingsConfigDict(
         env_file=".env",

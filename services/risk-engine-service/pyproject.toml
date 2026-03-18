@@ -1,22 +1,42 @@
-[project]
+[tool.poetry]
 name = "risk-engine-service"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "Kolade Fajimi",email = "fajimikolade23@gmail.com"}
-]
-requires-python = ">=3.11"
-dependencies = [
-    "grpcio (>=1.78.0,<2.0.0)"
-]
+description = "Risk engine service for AegisRisk"
+authors = ["Kolade Fajimi <fajimikolade23@gmail.com>"]
+readme = "README.md"
+packages = [{include = "risk_engine_service"}]
 
+[tool.poetry.dependencies]
+python = ">=3.11"
+grpcio = "^1.78.0"
+sqlalchemy = "^2.0.48"
+alembic = "^1.18.4"
+asyncpg = "^0.31.0"
+aioboto3 = "^15.5.0"
+redis = "^7.3.0"
+protobuf = "^7.34.0"
+pytest = "^9.0.2"
+pydantic-settings = "^2.13.1"
+fastapi = "^0.135.1"
+# Quote the key and ensure the path is correct relative to this file
+"shared" = { path = "../../shared", develop = true }
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.poetry.group.test.dependencies]
+pytest = ">=8.0"
+pytest-asyncio = ">=0.24"
+aiosqlite = ">=0.20"
+
 
 [[tool.poetry.source]]
 name = "safety"
 url = "https://pkgs.safetycli.com/repository/none-19107/pypi/simple/"
 priority = "primary"
 
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]

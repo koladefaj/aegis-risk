@@ -65,6 +65,16 @@ class TransactionClientMapper:
 
     @staticmethod
     def from_create_proto(proto: transaction_pb2.CreateTransactionResponse) -> TransactionAccepted:
+        # Convert nested gRPC risk factors back to a list of dicts for Pydantic
+        risk_factors_list = [
+            {
+                "factor": rf.factor,
+                "severity": rf.severity,
+                "detail": rf.detail
+            }
+            for rf in proto.risk_factors
+        ]
+
         return TransactionAccepted(
             transaction_id=uuid.UUID(proto.transaction_id),
             idempotency_key=proto.idempotency_key,
@@ -77,6 +87,11 @@ class TransactionClientMapper:
             status=proto.status,
             created_at=datetime.fromisoformat(proto.created_at),
             already_existed=proto.already_existed,
+            # Add the mapped risk data
+            decision=proto.decision,
+            risk_score=proto.risk_score,
+            risk_level=proto.risk_level,
+            risk_factors=risk_factors_list
         )
     
     @staticmethod

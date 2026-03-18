@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from aegis_shared.generated import common_pb2 as common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11transaction.proto\x12\x11\x61\x65gis.transaction\x1a\x0c\x63ommon.proto\"\xa1\x02\n\x18\x43reateTransactionRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x17\n\x0fidempotency_key\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x16\n\x0esender_country\x18\x07 \x01(\t\x12\x18\n\x10receiver_country\x18\x08 \x01(\t\x12\x1a\n\x12\x64\x65vice_fingerprint\x18\t \x01(\t\x12\x12\n\nip_address\x18\n \x01(\t\x12\x0f\n\x07\x63hannel\x18\x0b \x01(\t\"\x85\x02\n\x19\x43reateTransactionResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x17\n\x0fidempotency_key\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x0e\n\x06status\x18\x07 \x01(\t\x12\x12\n\ncreated_at\x18\x08 \x01(\t\x12\x17\n\x0f\x61lready_existed\x18\t \x01(\x08\x12\x16\n\x0esender_country\x18\n \x01(\t\x12\x18\n\x10receiver_country\x18\x0b \x01(\t\"`\n\x15GetTransactionRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\"\xfd\x01\n\x16GetTransactionResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x17\n\x0fidempotency_key\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x16\n\x0esender_country\x18\x07 \x01(\t\x12\x18\n\x10receiver_country\x18\x08 \x01(\t\x12\x0e\n\x06status\x18\t \x01(\t\x12\x12\n\ncreated_at\x18\n \x01(\t\x12\x12\n\nupdated_at\x18\x0b \x01(\t\"\x82\x01\n\x13UpdateStatusRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\x12\x12\n\nnew_status\x18\x03 \x01(\t\x12\x0e\n\x06reason\x18\x04 \x01(\t\"l\n\x14UpdateStatusResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x17\n\x0fprevious_status\x18\x02 \x01(\t\x12\x12\n\nnew_status\x18\x03 \x01(\t\x12\x0f\n\x07success\x18\x04 \x01(\x08\x32\xab\x03\n\x12TransactionService\x12n\n\x11\x43reateTransaction\x12+.aegis.transaction.CreateTransactionRequest\x1a,.aegis.transaction.CreateTransactionResponse\x12\x65\n\x0eGetTransaction\x12(.aegis.transaction.GetTransactionRequest\x1a).aegis.transaction.GetTransactionResponse\x12j\n\x17UpdateTransactionStatus\x12&.aegis.transaction.UpdateStatusRequest\x1a\'.aegis.transaction.UpdateStatusResponse\x12R\n\x0bHealthCheck\x12 .aegis.common.HealthCheckRequest\x1a!.aegis.common.HealthCheckResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11transaction.proto\x12\x11\x61\x65gis.transaction\x1a\x0c\x63ommon.proto\"\xa1\x02\n\x18\x43reateTransactionRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x17\n\x0fidempotency_key\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x16\n\x0esender_country\x18\x07 \x01(\t\x12\x18\n\x10receiver_country\x18\x08 \x01(\t\x12\x1a\n\x12\x64\x65vice_fingerprint\x18\t \x01(\t\x12\x12\n\nip_address\x18\n \x01(\t\x12\x0f\n\x07\x63hannel\x18\x0b \x01(\t\">\n\nRiskFactor\x12\x0e\n\x06\x66\x61\x63tor\x18\x01 \x01(\t\x12\x10\n\x08severity\x18\x02 \x01(\t\x12\x0e\n\x06\x64\x65tail\x18\x03 \x01(\t\"\xf4\x02\n\x19\x43reateTransactionResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x17\n\x0fidempotency_key\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x16\n\x0esender_country\x18\x07 \x01(\t\x12\x18\n\x10receiver_country\x18\x08 \x01(\t\x12\x0e\n\x06status\x18\t \x01(\t\x12\x12\n\ncreated_at\x18\n \x01(\t\x12\x17\n\x0f\x61lready_existed\x18\x0b \x01(\x08\x12\x10\n\x08\x64\x65\x63ision\x18\x0c \x01(\t\x12\x12\n\nrisk_score\x18\r \x01(\x01\x12\x12\n\nrisk_level\x18\x0e \x01(\t\x12\x33\n\x0crisk_factors\x18\x0f \x03(\x0b\x32\x1d.aegis.transaction.RiskFactor\"`\n\x15GetTransactionRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\"\xfd\x01\n\x16GetTransactionResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x17\n\x0fidempotency_key\x18\x02 \x01(\t\x12\x0e\n\x06\x61mount\x18\x03 \x01(\t\x12\x10\n\x08\x63urrency\x18\x04 \x01(\t\x12\x11\n\tsender_id\x18\x05 \x01(\t\x12\x13\n\x0breceiver_id\x18\x06 \x01(\t\x12\x16\n\x0esender_country\x18\x07 \x01(\t\x12\x18\n\x10receiver_country\x18\x08 \x01(\t\x12\x0e\n\x06status\x18\t \x01(\t\x12\x12\n\ncreated_at\x18\n \x01(\t\x12\x12\n\nupdated_at\x18\x0b \x01(\t\"\x82\x01\n\x13UpdateStatusRequest\x12/\n\x08metadata\x18\x01 \x01(\x0b\x32\x1d.aegis.common.RequestMetadata\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\x12\x12\n\nnew_status\x18\x03 \x01(\t\x12\x0e\n\x06reason\x18\x04 \x01(\t\"l\n\x14UpdateStatusResponse\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12\x17\n\x0fprevious_status\x18\x02 \x01(\t\x12\x12\n\nnew_status\x18\x03 \x01(\t\x12\x0f\n\x07success\x18\x04 \x01(\x08\x32\xab\x03\n\x12TransactionService\x12n\n\x11\x43reateTransaction\x12+.aegis.transaction.CreateTransactionRequest\x1a,.aegis.transaction.CreateTransactionResponse\x12\x65\n\x0eGetTransaction\x12(.aegis.transaction.GetTransactionRequest\x1a).aegis.transaction.GetTransactionResponse\x12j\n\x17UpdateTransactionStatus\x12&.aegis.transaction.UpdateStatusRequest\x1a\'.aegis.transaction.UpdateStatusResponse\x12R\n\x0bHealthCheck\x12 .aegis.common.HealthCheckRequest\x1a!.aegis.common.HealthCheckResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,16 +34,18 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_CREATETRANSACTIONREQUEST']._serialized_start=55
   _globals['_CREATETRANSACTIONREQUEST']._serialized_end=344
-  _globals['_CREATETRANSACTIONRESPONSE']._serialized_start=347
-  _globals['_CREATETRANSACTIONRESPONSE']._serialized_end=608
-  _globals['_GETTRANSACTIONREQUEST']._serialized_start=610
-  _globals['_GETTRANSACTIONREQUEST']._serialized_end=706
-  _globals['_GETTRANSACTIONRESPONSE']._serialized_start=709
-  _globals['_GETTRANSACTIONRESPONSE']._serialized_end=962
-  _globals['_UPDATESTATUSREQUEST']._serialized_start=965
-  _globals['_UPDATESTATUSREQUEST']._serialized_end=1095
-  _globals['_UPDATESTATUSRESPONSE']._serialized_start=1097
-  _globals['_UPDATESTATUSRESPONSE']._serialized_end=1205
-  _globals['_TRANSACTIONSERVICE']._serialized_start=1208
-  _globals['_TRANSACTIONSERVICE']._serialized_end=1635
+  _globals['_RISKFACTOR']._serialized_start=346
+  _globals['_RISKFACTOR']._serialized_end=408
+  _globals['_CREATETRANSACTIONRESPONSE']._serialized_start=411
+  _globals['_CREATETRANSACTIONRESPONSE']._serialized_end=783
+  _globals['_GETTRANSACTIONREQUEST']._serialized_start=785
+  _globals['_GETTRANSACTIONREQUEST']._serialized_end=881
+  _globals['_GETTRANSACTIONRESPONSE']._serialized_start=884
+  _globals['_GETTRANSACTIONRESPONSE']._serialized_end=1137
+  _globals['_UPDATESTATUSREQUEST']._serialized_start=1140
+  _globals['_UPDATESTATUSREQUEST']._serialized_end=1270
+  _globals['_UPDATESTATUSRESPONSE']._serialized_start=1272
+  _globals['_UPDATESTATUSRESPONSE']._serialized_end=1380
+  _globals['_TRANSACTIONSERVICE']._serialized_start=1383
+  _globals['_TRANSACTIONSERVICE']._serialized_end=1810
 # @@protoc_insertion_point(module_scope)

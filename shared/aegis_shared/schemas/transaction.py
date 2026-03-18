@@ -1,4 +1,4 @@
-""" Transaction related pydantic schemas. """
+"""Transaction related pydantic schemas."""
 
 import re
 from datetime import datetime, UTC
@@ -6,7 +6,8 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from aegis_shared.enums import TransactionStatus
+from aegis_shared.enums import TransactionStatus, RiskDecision, RiskLevel
+from aegis_shared.schemas.risk import RiskFactor  # ✅ import from risk schemas
 from pydantic import BaseModel, Field, field_validator, ConfigDict, model_validator
 
 IDEMPOTENCY_PATTERN = re.compile(r"^[a-zA-Z0-9-_]{10,64}$")
@@ -14,26 +15,22 @@ IDEMPOTENCY_PATTERN = re.compile(r"^[a-zA-Z0-9-_]{10,64}$")
 
 class TransactionCreate(BaseModel):
     """Schema for creating a new transaction."""
-    idempotency_key: str | None = Field(None, min_length=10, max_length=64, description="Optional unique key (transaction reference prefered). Auto-generated if not provided.")
-    amount: Decimal = Field(..., gt=0, description="Transaction amount")
-    currency: str = Field(..., min_length=3, max_length=3, description="ISO 4217 currency code")
-    sender_id: str = Field(..., min_length=1, max_length=64, description="Sender account ID")
-    receiver_id: str = Field(..., min_length=1, max_length=64, description="Receiver account ID")
-    sender_country: str = Field(..., min_length=2, max_length=2, description="Sender ISO country code")
-    receiver_country: str = Field(..., min_length=2, max_length=2, description="Receiver ISO country code")
-    device_fingerprint: str | None = Field(None, max_length=128, description="Device fingerprint hash")
-    channel: Literal["web", "mobile", "api"] = Field(default="web", description="Transaction channel (web, mobile, api)")
-    transaction_metadata: dict[str, str] | None = Field(default=None, description="Additional metadata")
+    idempotency_key: str | None = Field(None, min_length=10, max_length=64)
+    amount: Decimal = Field(..., gt=0)
+    currency: str = Field(..., min_length=3, max_length=3)
+    sender_id: str = Field(..., min_length=1, max_length=64)
+    receiver_id: str = Field(..., min_length=1, max_length=64)
+    sender_country: str = Field(..., min_length=2, max_length=2)
+    receiver_country: str = Field(..., min_length=2, max_length=2)
+    device_fingerprint: str | None = Field(None, max_length=128)
+    channel: Literal["web", "mobile", "api"] = Field(default="web")
+    transaction_metadata: dict[str, str] | None = Field(default=None)
 
     @field_validator("idempotency_key")
     @classmethod
     def validate_idempotency_key(cls, v: str | None) -> str | None:
-        if v is None:
-            return v
-
-        if not IDEMPOTENCY_PATTERN.match(v):
+        if v is not None and not IDEMPOTENCY_PATTERN.match(v):
             raise ValueError("Invalid idempotency key format")
-
         return v
 
     @field_validator("currency")
@@ -45,21 +42,27 @@ class TransactionCreate(BaseModel):
     @classmethod
     def country_uppercase(cls, v: str) -> str:
         return v.upper()
-    
+
     @model_validator(mode="after")
     def validate_accounts(self):
         if self.sender_id == self.receiver_id:
             raise ValueError("Sender and receiver cannot be the same")
         return self
-    
+
     @field_validator("amount")
-    def validate_amount_precision(cls, v: Decimal):
+    @classmethod
+    def validate_amount_precision(cls, v: Decimal) -> Decimal:
         if v.as_tuple().exponent < -2:
             raise ValueError("Amount cannot exceed 2 decimal places")
         return v.quantize(Decimal("0.01"))
 
+
 class TransactionAccepted(BaseModel):
-    """Response when a transaction is accepted for processing."""
+    """
+    Response when a transaction is accepted and scored.
+    Returned synchronously to the bank — includes risk decision.
+    LLM explanation NOT included — delivered async via webhook.
+    """
     transaction_id: UUID
     idempotency_key: str
     amount: Decimal
@@ -68,10 +71,15 @@ class TransactionAccepted(BaseModel):
     receiver_id: str
     sender_country: str
     receiver_country: str
-    status: str = "RECEIVED"
+    status: TransactionStatus = TransactionStatus.RECEIVED
     created_at: datetime
     already_existed: bool = False
 
+    # ── Risk fields ───────────────────────────────────────────────────────────
+    decision: RiskDecision = RiskDecision.REVIEW
+    risk_score: float = 0.0
+    risk_level: RiskLevel = RiskLevel.LOW
+    risk_factors: list[RiskFactor] = []  # ✅ RiskFactor now imported above
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -88,7 +96,7 @@ class TransactionAccepted(BaseModel):
 
 
 class TransactionResponse(BaseModel):
-    """Schema for transaction response."""
+    """Schema for transaction GET response."""
     transaction_id: UUID
     idempotency_key: str
     amount: Decimal
@@ -101,6 +109,8 @@ class TransactionResponse(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime | None = None
 
+    model_config = ConfigDict(from_attributes=True)
+
     @model_validator(mode="before")
     @classmethod
     def parse_amount(cls, values):
@@ -112,11 +122,9 @@ class TransactionResponse(BaseModel):
                 setattr(values, "amount", Decimal(amt))
         return values
 
-    model_config = ConfigDict(from_attributes=True)
-
 
 class TransactionEvent(BaseModel):
-    """Schema for SQS transaction event."""
+    """SQS event payload — includes risk decision for async post-processing."""
     transaction_id: UUID
     idempotency_key: str
     amount: Decimal
@@ -128,8 +136,15 @@ class TransactionEvent(BaseModel):
     device_fingerprint: str | None = None
     ip_address: str | None = None
     channel: Literal["web", "mobile", "api"] = Field(default="web")
-    transaction_metadata: dict[str, str] | None = Field(default=None, max_length=20)
+    transaction_metadata: dict[str, str] | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # ── Risk fields for async post-processing ─────────────────────────────────
+    risk_decision: RiskDecision = RiskDecision.REVIEW  # ✅ use enum not RiskDecisionEnum
+    risk_score: float = 0.0
+    risk_factors: list[RiskFactor] = []
+
+    model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="before")
     @classmethod
@@ -142,11 +157,13 @@ class TransactionEvent(BaseModel):
                 setattr(values, "amount", Decimal(amt))
         return values
 
+
 class TransactionUpdate(BaseModel):
     transaction_id: UUID
     previous_status: str
     new_status: str
     success: bool
+
 
 class ExplanationStreamChunk(BaseModel):
     """A single chunk of the LLM explanation stream."""

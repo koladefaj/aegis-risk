@@ -30,7 +30,7 @@ async_session_factory = async_sessionmaker(
 
 @asynccontextmanager
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    """Provide a transactional database session.
+    """Provide a risk database session.
 
     Automatically commits on success, rolls back on exception.
 
@@ -41,8 +41,10 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_factory() as session:
         try:
             yield session
+            await session.commit()
         except Exception:
             await session.rollback()
             raise
+
 
 

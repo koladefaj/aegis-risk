@@ -23,17 +23,8 @@ class TransactionGRPCClient:
     Client for communicating with the Transaction gRPC service.
     """
 
-    def __init__(self):
-        if settings.GRPC_USE_TLS:
-            credentials = grpc.ssl_channel_credentials()
-            self.channel = grpc.aio.secure_channel(
-                settings.TRANSACTION_GRPC_ADDR,
-                credentials
-            )
-        else:
-            self.channel = grpc.aio.insecure_channel(
-                settings.TRANSACTION_GRPC_ADDR
-            )
+    def __init__(self, channel):
+        self.channel = channel
         self.stub = transaction_pb2_grpc.TransactionServiceStub(self.channel)
 
     async def create_transaction(

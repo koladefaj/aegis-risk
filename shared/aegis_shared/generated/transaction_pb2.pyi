@@ -1,7 +1,8 @@
 from aegis_shared.generated import common_pb2 as _common_pb2
+from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from collections.abc import Mapping as _Mapping
+from collections.abc import Iterable as _Iterable, Mapping as _Mapping
 from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
@@ -32,31 +33,49 @@ class CreateTransactionRequest(_message.Message):
     channel: str
     def __init__(self, metadata: _Optional[_Union[_common_pb2.RequestMetadata, _Mapping]] = ..., idempotency_key: _Optional[str] = ..., amount: _Optional[str] = ..., currency: _Optional[str] = ..., sender_id: _Optional[str] = ..., receiver_id: _Optional[str] = ..., sender_country: _Optional[str] = ..., receiver_country: _Optional[str] = ..., device_fingerprint: _Optional[str] = ..., ip_address: _Optional[str] = ..., channel: _Optional[str] = ...) -> None: ...
 
+class RiskFactor(_message.Message):
+    __slots__ = ("factor", "severity", "detail")
+    FACTOR_FIELD_NUMBER: _ClassVar[int]
+    SEVERITY_FIELD_NUMBER: _ClassVar[int]
+    DETAIL_FIELD_NUMBER: _ClassVar[int]
+    factor: str
+    severity: str
+    detail: str
+    def __init__(self, factor: _Optional[str] = ..., severity: _Optional[str] = ..., detail: _Optional[str] = ...) -> None: ...
+
 class CreateTransactionResponse(_message.Message):
-    __slots__ = ("transaction_id", "idempotency_key", "amount", "currency", "sender_id", "receiver_id", "status", "created_at", "already_existed", "sender_country", "receiver_country")
+    __slots__ = ("transaction_id", "idempotency_key", "amount", "currency", "sender_id", "receiver_id", "sender_country", "receiver_country", "status", "created_at", "already_existed", "decision", "risk_score", "risk_level", "risk_factors")
     TRANSACTION_ID_FIELD_NUMBER: _ClassVar[int]
     IDEMPOTENCY_KEY_FIELD_NUMBER: _ClassVar[int]
     AMOUNT_FIELD_NUMBER: _ClassVar[int]
     CURRENCY_FIELD_NUMBER: _ClassVar[int]
     SENDER_ID_FIELD_NUMBER: _ClassVar[int]
     RECEIVER_ID_FIELD_NUMBER: _ClassVar[int]
+    SENDER_COUNTRY_FIELD_NUMBER: _ClassVar[int]
+    RECEIVER_COUNTRY_FIELD_NUMBER: _ClassVar[int]
     STATUS_FIELD_NUMBER: _ClassVar[int]
     CREATED_AT_FIELD_NUMBER: _ClassVar[int]
     ALREADY_EXISTED_FIELD_NUMBER: _ClassVar[int]
-    SENDER_COUNTRY_FIELD_NUMBER: _ClassVar[int]
-    RECEIVER_COUNTRY_FIELD_NUMBER: _ClassVar[int]
+    DECISION_FIELD_NUMBER: _ClassVar[int]
+    RISK_SCORE_FIELD_NUMBER: _ClassVar[int]
+    RISK_LEVEL_FIELD_NUMBER: _ClassVar[int]
+    RISK_FACTORS_FIELD_NUMBER: _ClassVar[int]
     transaction_id: str
     idempotency_key: str
     amount: str
     currency: str
     sender_id: str
     receiver_id: str
+    sender_country: str
+    receiver_country: str
     status: str
     created_at: str
     already_existed: bool
-    sender_country: str
-    receiver_country: str
-    def __init__(self, transaction_id: _Optional[str] = ..., idempotency_key: _Optional[str] = ..., amount: _Optional[str] = ..., currency: _Optional[str] = ..., sender_id: _Optional[str] = ..., receiver_id: _Optional[str] = ..., status: _Optional[str] = ..., created_at: _Optional[str] = ..., already_existed: bool = ..., sender_country: _Optional[str] = ..., receiver_country: _Optional[str] = ...) -> None: ...
+    decision: str
+    risk_score: float
+    risk_level: str
+    risk_factors: _containers.RepeatedCompositeFieldContainer[RiskFactor]
+    def __init__(self, transaction_id: _Optional[str] = ..., idempotency_key: _Optional[str] = ..., amount: _Optional[str] = ..., currency: _Optional[str] = ..., sender_id: _Optional[str] = ..., receiver_id: _Optional[str] = ..., sender_country: _Optional[str] = ..., receiver_country: _Optional[str] = ..., status: _Optional[str] = ..., created_at: _Optional[str] = ..., already_existed: bool = ..., decision: _Optional[str] = ..., risk_score: _Optional[float] = ..., risk_level: _Optional[str] = ..., risk_factors: _Optional[_Iterable[_Union[RiskFactor, _Mapping]]] = ...) -> None: ...
 
 class GetTransactionRequest(_message.Message):
     __slots__ = ("metadata", "transaction_id")

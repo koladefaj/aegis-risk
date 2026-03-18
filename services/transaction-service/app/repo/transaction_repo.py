@@ -3,8 +3,9 @@
 from sqlalchemy import select
 from datetime import datetime, UTC
 from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
+from aegis_shared.schemas.transaction import TransactionUpdate
 from app.db.session import get_session
 from app.models.transaction import Transaction
 from aegis_shared.enums import TransactionStatus
@@ -14,18 +15,31 @@ logger = get_logger("transaction_repo")
 
 # Valid state transitions
 VALID_TRANSITIONS = {
-    TransactionStatus.RECEIVED: [TransactionStatus.PROCESSING, TransactionStatus.DEAD_LETTERED],
+    TransactionStatus.RECEIVED: [
+        TransactionStatus.PROCESSING, 
+        TransactionStatus.DEAD_LETTERED, 
+        TransactionStatus.APPROVED,
+        TransactionStatus.REVIEW, 
+        TransactionStatus.BLOCKED,
+    ],
+    TransactionStatus.REVIEW: [
+        TransactionStatus.APPROVED, 
+        TransactionStatus.BLOCKED
+    ],
     TransactionStatus.PROCESSING: [TransactionStatus.COMPLETED, TransactionStatus.FAILED],
-    TransactionStatus.FAILED: [TransactionStatus.RECEIVED],  # Retry
-    TransactionStatus.COMPLETED: [],  # Terminal state
-    TransactionStatus.DEAD_LETTERED: [],  # Terminal state
+    TransactionStatus.FAILED: [TransactionStatus.RECEIVED],
+    TransactionStatus.COMPLETED: [],
+    TransactionStatus.DEAD_LETTERED: [],
+    TransactionStatus.APPROVED: [TransactionStatus.PROCESSING],
 }
-
 
 class TransactionRepository:
     """Database operations for Transaction model.
     All operations use atomic transactions with proper error handling.
     """
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
     async def create(self, data: dict) -> Transaction:
         """Insert a new transaction.
@@ -36,18 +50,14 @@ class TransactionRepository:
         Returns:
             Created Transaction ORM instance.
         """
-        async with get_session() as session:
-            txn = Transaction(**data)
-            try:
-                session.add(txn)
-                await session.commit()
-                await session.refresh(txn)
-            except Exception:
-                await session.rollback()
-                raise
+            
+        txn = Transaction(**data)
+        self.session.add(txn)
+        await self.session.flush()
+        await self.session.refresh(txn)
 
-            logger.info("transaction_created", transaction_id=str(txn.transaction_id))
-            return txn
+        logger.info("transaction_created", transaction_id=str(txn.transaction_id))
+        return txn
 
     async def find_by_id(self, transaction_id: UUID) -> Transaction | None:
         """Find a transaction by ID.
@@ -58,11 +68,11 @@ class TransactionRepository:
         Returns:
             Transaction ORM instance or None.
         """
-        async with get_session() as session:
-            stmt = select(Transaction).where(Transaction.transaction_id == transaction_id)
-            result = await session.execute(stmt)
-            txn = result.scalar_one_or_none()
-            return txn
+        
+        stmt = select(Transaction).where(Transaction.transaction_id == transaction_id)
+        result = await self.session.execute(stmt)
+        txn = result.scalar_one_or_none()
+        return txn
 
     async def find_by_idempotency_key(self, idempotency_key: str) -> Transaction | None:
         """Find a transaction by idempotency key.
@@ -73,17 +83,17 @@ class TransactionRepository:
         Returns:
             Transaction ORM instance or None.
         """
-        async with get_session() as session:
-            stmt = select(Transaction).where(Transaction.idempotency_key == idempotency_key)
-            result = await session.execute(stmt)
-            txn = result.scalar_one_or_none()
-            return txn
+        
+        stmt = select(Transaction).where(Transaction.idempotency_key == idempotency_key)
+        result = await self.session.execute(stmt)
+        txn = result.scalar_one_or_none()
+        return txn
 
     async def update_status(
         self,
         transaction_id: UUID,
         new_status: str,
-        reason: str = "",
+        reason: str | None = None,
     ) -> dict:
         """Atomically update transaction status with validation.
 
@@ -100,43 +110,45 @@ class TransactionRepository:
         Raises:
             ValueError: If transition is invalid.
         """
-        async with get_session() as session:
-            stmt = (
-                select(Transaction)
-                .where(Transaction.transaction_id == transaction_id)
-                .with_for_update()
-            )
-            result = await session.execute(stmt)
-            txn = result.scalar_one_or_none()
+        
+        stmt = (
+            select(Transaction)
+            .where(Transaction.transaction_id == transaction_id)
+            .with_for_update()
+        )
+        result = await self.session.execute(stmt)
+        txn = result.scalar_one_or_none()
 
-            if txn is None:
-                raise ValueError(f"Transaction {transaction_id} not found")
+        if txn is None:
+            raise ValueError(f"Transaction {transaction_id} not found")
 
-            current_status = TransactionStatus(txn.status)
-            target_status = TransactionStatus(new_status)
+        current_status = TransactionStatus(txn.status)
+        target_status = TransactionStatus(new_status)
 
-            # Validate transition
-            if target_status not in VALID_TRANSITIONS.get(current_status, []):
-                raise ValueError(
-                    f"Invalid transition from {current_status.value} to {target_status.value}"
-                )
-
-            previous_status = txn.status
-            txn.status = target_status.value
-            txn.updated_at = datetime.now(UTC)
-
-            await session.commit()
-
-            logger.info(
-                "transaction_status_updated",
-                transaction_id=transaction_id,
-                previous_status=previous_status,
-                new_status=target_status.value,
+        # Validate transition
+        if target_status not in VALID_TRANSITIONS.get(current_status, []):
+            raise ValueError(
+                f"Invalid transition from {current_status.value} to {target_status.value}"
             )
 
-            return {
-                "transaction_id": transaction_id,
-                "previous_status": previous_status,
-                "new_status": target_status.value,
-                "success": True,
-            }
+        previous_status = txn.status
+        txn.status = target_status.value
+        txn.updated_at = datetime.now(UTC)
+
+        await self.session.flush()
+        await self.session.refresh(txn)
+
+
+        logger.info(
+            "transaction_status_updated",
+            transaction_id=transaction_id,
+            previous_status=previous_status,
+            new_status=target_status.value,
+        )
+
+        return TransactionUpdate(
+            transaction_id= transaction_id,
+            previous_status= previous_status,
+            new_status=target_status.value,
+            success= True,
+        )

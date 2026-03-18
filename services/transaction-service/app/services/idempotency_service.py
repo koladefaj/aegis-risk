@@ -1,6 +1,7 @@
 """Idempotency service — Redis-backed cache for preventing duplicate processing."""
 
 import json
+from redis.asyncio import Redis
 from aegis_shared.utils.redis import get_redis
 from aegis_shared.utils.logging import get_logger
 
@@ -17,8 +18,8 @@ class IdempotencyService:
     duplicate processing. TTL ensures cache doesn't grow unbounded.
     """
 
-    def __init__(self):
-        self.redis_client = get_redis()
+    def __init__(self, redis_client: Redis):
+        self.redis_client = redis_client
 
     async def acquire_lock(self, idempotency_key: str) -> bool:
         """
@@ -61,7 +62,7 @@ class IdempotencyService:
             return None
         except Exception as e:
             logger.error("idempotency_check_failed", error=str(e))
-            return None  # Fail open — proceed with processing
+            return None
 
     async def store(self, idempotency_key: str, response: dict) -> None:
         """Store a response for an idempotency key.
@@ -80,7 +81,7 @@ class IdempotencyService:
             logger.info("idempotency_cached", idempotency_key=idempotency_key)
         except Exception as e:
             logger.error("idempotency_store_failed", error=str(e))
-            # Non-fatal — processing continues
+
 
     async def close(self) -> None:
         """Close Redis connection. Call during app shutdown."""

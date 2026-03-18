@@ -2,28 +2,36 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install gcc for compiling dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
+# Install poetry
 RUN pip install --no-cache-dir poetry
 
-# Copy only pyproject.toml + poetry.lock first
+# Copy shared library FIRST
+COPY shared/ /shared/
+
+# Copy dependency files
 COPY services/risk-engine-service/pyproject.toml services/risk-engine-service/poetry.lock* ./
 
-# Install dependencies
+# Configure poetry
 RUN poetry config virtualenvs.create false
+
+# Install dependencies
 RUN poetry install --no-interaction --no-ansi --no-root
 
-# Copy shared libs, proto files, and service code
-COPY shared/ /shared/
-COPY proto/ /proto/
+# Install shared package
+RUN pip install /shared
+
+# Copy application code
 COPY services/risk-engine-service/app/ ./app/
 
-# Expose service port
+# Copy alembic files
+COPY services/risk-engine-service/alembic/ ./alembic/
+COPY services/risk-engine-service/alembic.ini ./
+
 EXPOSE 50052
 
-# Run service
 CMD ["python", "-m", "app.main"]

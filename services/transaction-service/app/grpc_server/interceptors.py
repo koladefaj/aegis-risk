@@ -9,7 +9,7 @@ from grpc.aio import ServerInterceptor
 from aegis_shared.utils.logging import get_logger
 from aegis_shared.utils.tracing import set_correlation_id, clear_correlation_id
 
-logger = get_logger("grpc_interceptor")
+logger = get_logger("transaction_service_grpc_interceptor")
 
 
 class LoggingInterceptor(ServerInterceptor):

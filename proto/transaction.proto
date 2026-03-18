@@ -25,6 +25,13 @@ message CreateTransactionRequest {
   string channel = 11;
 }
 
+// Inline risk factor — returned to bank in sync response
+message RiskFactor {
+  string factor = 1;    // "HIGH_VELOCITY", "NEW_ACCOUNT", etc.
+  string severity = 2;  // "HIGH", "MEDIUM", "LOW"
+  string detail = 3;
+}
+
 message CreateTransactionResponse {
   string transaction_id = 1;
   string idempotency_key = 2;
@@ -32,11 +39,15 @@ message CreateTransactionResponse {
   string currency = 4;
   string sender_id = 5;
   string receiver_id = 6;
-  string status = 7;
-  string created_at = 8;
-  bool already_existed = 9;
-  string sender_country = 10;
-  string receiver_country = 11;
+  string sender_country = 7;
+  string receiver_country = 8;
+  string status = 9;
+  string created_at = 10;
+  bool already_existed = 11;
+  string decision = 12;       // "APPROVE", "BLOCK", "REVIEW"
+  double risk_score = 13;
+  string risk_level = 14;     // "LOW", "MEDIUM", "HIGH", "CRITICAL"
+  repeated RiskFactor risk_factors = 15;  // ✅ repeated message, not JSON string
 }
 
 message GetTransactionRequest {
